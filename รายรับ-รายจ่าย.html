@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>รายงานบัญชี</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; margin: 0; padding: 0; color: #333; width: 100%; }
+        
+        /* ขยายตู้คอนเทนเนอร์ให้เต็มจอมือถือร้อยเปอร์เซ็นต์ */
+        .container { width: 100%; max-width: 100%; margin: 0; background: white; overflow: hidden; border-bottom: 1px solid #dee2e6; }
+        
+        .header-box { background-color: #495057; text-align: center; padding: 16px 12px; }
+        .header-input { background: transparent; border: none; font-weight: bold; font-size: 1.3rem; text-align: center; width: 100%; font-family: inherit; color: #ffffff; border-bottom: 1px dashed #ced4da; }
+        .header-input:focus { outline: none; background: rgba(255,255,255,0.15); }
+        
+        .sub-header { padding: 14px 12px; border-bottom: 1px solid #dee2e6; font-size: 0.95rem; background-color: #ffffff; }
+        .section-title { background-color: #e9ecef; font-weight: bold; padding: 10px 12px; font-size: 1.05rem; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; color: #212529; }
+        
+        /* ปรับแต่งแถวตารางให้ขยายเต็มความกว้างจอ และจัดสรรพื้นที่ให้สมดุล */
+        .row-item { display: flex; align-items: center; padding: 10px 8px; gap: 6px; border-bottom: 1px solid #f1f3f5; background-color: #ffffff; width: 100%; }
+        .row-item input { border: 1px solid #ced4da; padding: 8px 6px; border-radius: 4px; font-size: 0.95rem; color: #495057; height: 38px; }
+        .row-item input:focus { border-color: #6c757d; outline: none; }
+        
+        /* แบ่งความกว้างแต่ละช่องให้เต็มพื้นที่จอพอดี */
+        .input-title { flex: 2; min-width: 0; } /* ช่องชื่อรายการขยายตามพื้นที่ที่เหลือ */
+        .input-num { width: 25%; min-width: 75px; text-align: right; } /* ช่อง USDT */
+        .input-rate { width: 16%; min-width: 50px; text-align: right; } /* ช่อง เรท */
+        .result-thb { width: 22%; min-width: 75px; text-align: right; font-weight: bold; color: #6c757d; font-size: 0.85rem; word-break: break-all; }
+        
+        .summary-box { background-color: #f8f9fa; padding: 14px 12px; border-top: 2px dashed #dee2e6; font-size: 0.95rem; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; color: #495057; }
+        .total-balance { background-color: #343a40; color: #ffffff; font-weight: bold; padding: 16px 12px; display: flex; justify-content: space-between; font-size: 1.15rem; }
+        
+        /* กล่องข้อความรายงานด้านล่าง */
+        .output-box { width: 100%; padding: 14px 12px; background: #fff; box-sizing: border-box; }
+        .output-title { font-weight: bold; margin-bottom: 12px; color: #212529; display: flex; justify-content: space-between; align-items: center; }
+        textarea { width: 100%; height: 280px; border: 1px solid #ced4da; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 0.95rem; resize: none; background-color: #f8f9fa; box-sizing: border-box; color: #212529; }
+        
+        /* ปุ่มขนาดพอดีนิ้วจิ้มง่ายบนมือถือ */
+        .btn { background-color: #6c757d; color: white; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: background 0.2s; height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+        .btn:hover { background-color: #495057; }
+        .btn-copy { background-color: #28a745; font-size: 0.95rem; padding: 0 16px; height: 38px; }
+        .btn-copy:hover { background-color: #218838; }
+        .btn-del { background-color: #dc3545; padding: 0 8px; font-size: 0.8rem; height: 38px; width: 38px; flex-shrink: 0; }
+        .btn-del:hover { background-color: #c82333; }
+        
+        #loading { position: fixed; top: 10px; right: 10px; background: rgba(33,37,41,0.9); color: #fff; padding: 8px 14px; border-radius: 4px; display: none; font-size: 0.85rem; z-index: 1000; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    </style>
+</head>
+<body>
+
+<div id="loading">กำลังซิงค์ข้อมูล...</div>
+
+<div class="container">
+    <div class="header-box">
+        <input type="text" id="app-title" class="header-input" value="รายงานบัญชี" oninput="calculateAll(); autoSave();">
+    </div>
+    
+    <div class="sub-header">
+        <strong>วันที่:</strong> <span id="current-date">27 มิถุนายน 2569</span><br>
+        <div style="margin-top: 10px; display:flex; align-items:center; gap: 8px;">
+            <strong>คงเหลือเก่า = </strong> 
+            <input type="number" id="old-balance" class="input-num" style="width: 110px; text-align: left;" value="" placeholder="0.00" step="0.01" oninput="calculateAll(); autoSave();"> USDT
+        </div>
+    </div>
+
+    <div class="section-title">
+        <span>รายรับ</span> 
+        <button class="btn" onclick="addInputRow('income-list', 'รายการรับ')">+ เพิ่มรายรับ</button>
+    </div>
+    <div id="income-list"></div>
+
+    <div class="section-title">
+        <span>รายจ่าย</span> 
+        <button class="btn" onclick="addInputRow('expense-list', 'รายการจ่าย')">+ เพิ่มรายจ่าย</button>
+    </div>
+    <div id="expense-list"></div>
+
+    <div class="summary-box">
+        <div class="summary-row">
+            <span>รวมรายรับ :</span>
+            <span id="total-income-str">0.00 USDT</span>
+        </div>
+        <div class="summary-row">
+            <span>รวมรายจ่าย :</span>
+            <span id="total-expense-str">0.00 USDT</span>
+        </div>
+    </div>
+
+    <div class="total-balance">
+        <span>คงเหลือ</span>
+        <span id="final-balance">0.00 USDT</span>
+    </div>
+</div>
+
+<div class="output-box">
+    <div class="output-title">
+        <span>📋 ข้อความรายงาน (พร้อมก๊อปปี้)</span>
+        <button class="btn btn-copy" onclick="copyText()">คัดลอกรายงาน</button>
+    </div>
+    <textarea id="report-text" readonly></textarea>
+</div>
+
+<script>
+    let saveTimeout;
+
+    function showLoading(show) {
+        document.getElementById('loading').style.display = show ? 'block' : 'none';
+    }
+
+    function addInputRow(listId, defaultText, vTitle="", vNum="", vRate="") {
+        const list = document.getElementById(listId);
+        const rowCount = list.children.length + 1;
+        const rowTitle = vTitle || `${rowCount}.${defaultText}`;
+        const row = document.createElement('div');
+        row.className = 'row-item';
+        row.innerHTML = `
+            <input type="text" class="input-title" value="${rowTitle}" oninput="calculateAll(); autoSave();">
+            <input type="number" class="input-num" value="${vNum}" step="0.01" placeholder="USDT" oninput="calculateAll(); autoSave();">
+            <input type="number" class="input-rate" value="${vRate}" step="0.01" placeholder="เรท" oninput="calculateAll(); autoSave();">
+            <span class="result-thb">0.00 บ.</span>
+            <button class="btn btn-del" onclick="this.parentElement.remove(); reIndex('${listId}'); calculateAll(); autoSave();">✕</button>
+        `;
+        list.appendChild(row);
+        calculateAll();
+    }
+
+    function reIndex(listId) {
+        const list = document.getElementById(listId);
+        const rows = list.getElementsByClassName('row-item');
+        for (let i = 0; i < rows.length; i++) {
+            let inputTitle = rows[i].getElementsByClassName('input-title')[0];
+            inputTitle.value = inputTitle.value.replace(/^\d+\./, (i + 1) + ".");
+        }
+    }
+
+    function calculateSection(listId) {
+        const list = document.getElementById(listId);
+        const rows = list.getElementsByClassName('row-item');
+        let totalUSDT = 0;
+        let totalTHB = 0;
+        let textDetails = "";
+
+        for (let row of rows) {
+            const title = row.getElementsByClassName('input-title')[0].value;
+            const usdt = parseFloat(row.getElementsByClassName('input-num')[0].value) || 0;
+            const rate = parseFloat(row.getElementsByClassName('input-rate')[0].value) || 0;
+            const thb = usdt * rate;
+            
+            row.getElementsByClassName('result-thb')[0].innerText = thb.toLocaleString('th-TH', {maximumFractionDigits: 2}) + " บ.";
+            
+            totalUSDT += usdt;
+            totalTHB += thb;
+
+            textDetails += `${title}\n( ${usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT /    ${rate.toFixed(2)}    / ${thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท )\n\n`;
+        }
+        return { usdt: totalUSDT, thb: totalTHB, text: textDetails };
+    }
+
+    function calculateAll() {
+        const titleText = document.getElementById('app-title').value;
+        const oldBalanceInput = document.getElementById('old-balance').value;
+        const oldBalance = parseFloat(oldBalanceInput) || 0;
+        
+        const income = calculateSection('income-list');
+        const expense = calculateSection('expense-list');
+
+        document.getElementById('total-income-str').innerText = `( ${income.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT / ${income.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท)`;
+        document.getElementById('total-expense-str').innerText = `( ${expense.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT / ${expense.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท)`;
+
+        const finalBalance = oldBalance + income.usdt - expense.usdt;
+        document.getElementById('final-balance').innerText = `(${finalBalance.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT)`;
+
+        let reportText = `${titleText}\n\n`;
+        reportText += `วันที่ 27 มิถุนายน 2569\n`;
+        
+        const oldBalanceFormatted = oldBalanceInput !== "" ? parseFloat(oldBalanceInput).toLocaleString('th-TH', {minimumFractionDigits: 2}) : "0.00";
+        reportText += `คงเหลือเก่า = ( ${oldBalanceFormatted} USDT )\n\n`;
+        
+        reportText += `รายรับ\n${income.text || "-\n\n"}`;
+        reportText += `รายจ่าย\n${expense.text || "-\n\n"}`;
+        
+        reportText += `รวมรายรับ :    ( ${income.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT /    ${income.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท)\n`;
+        reportText += `รวมรายจ่าย :    ( ${expense.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT /    ${expense.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท)\n\n`;
+        reportText += `คงเหลือ (${finalBalance.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT)`;
+
+        document.getElementById('report-text').value = reportText;
+    }
+
+    function autoSave() {
+        clearTimeout(saveTimeout);
+        showLoading(true);
+        saveTimeout = setTimeout(function() {
+            const appTitle = document.getElementById('app-title').value;
+            const oldBalance = document.getElementById('old-balance').value;
+            
+            const incomeRows = document.getElementById('income-list').getElementsByClassName('row-item');
+            let incomeData = [];
+            for(let row of incomeRows) {
+                incomeData.push({
+                    title: row.getElementsByClassName('input-title')[0].value,
+                    num: row.getElementsByClassName('input-num')[0].value,
+                    rate: row.getElementsByClassName('input-rate')[0].value
+                });
+            }
+
+            const expenseRows = document.getElementById('expense-list').getElementsByClassName('row-item');
+            let expenseData = [];
+            for(let row of expenseRows) {
+                expenseData.push({
+                    title: row.getElementsByClassName('input-title')[0].value,
+                    num: row.getElementsByClassName('input-num')[0].value,
+                    rate: row.getElementsByClassName('input-rate')[0].value
+                });
+            }
+
+            const appData = { appTitle, oldBalance, incomeData, expenseData };
+            
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run.withSuccessHandler(function() {
+                    showLoading(false);
+                }).saveDataToSheet(appData);
+            } else {
+                showLoading(false);
+            }
+        }, 1500);
+    }
+
+    function loadData() {
+        showLoading(true);
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run.withSuccessHandler(function(data) {
+                showLoading(false);
+                if (data) {
+                    document.getElementById('app-title').value = data.appTitle || "รายงานบัญชี";
+                    document.getElementById('old-balance').value = data.oldBalance || "";
+                    
+                    document.getElementById('income-list').innerHTML = '';
+                    if(data.incomeData) {
+                        data.incomeData.forEach(item => {
+                            addInputRow('income-list', '', item.title, item.num, item.rate);
+                        });
+                    }
+
+                    document.getElementById('expense-list').innerHTML = '';
+                    if(data.expenseData) {
+                        data.expenseData.forEach(item => {
+                            addInputRow('expense-list', '', item.title, item.num, item.rate);
+                        });
+                    }
+                }
+                calculateAll();
+            }).getSavedData();
+        } else {
+            showLoading(false);
+            calculateAll();
+        }
+    }
+
+    function copyText() {
+        const copyText = document.getElementById("report-text");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyText.value);
+        alert("คัดลอกรายงานลงคลิปบอร์ดแล้ว!");
+    }
+
+    window.onload = loadData;
+</script>
+
+</body>
+</html>
