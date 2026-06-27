@@ -16,6 +16,9 @@
     .row-item { display: flex; align-items: center; padding: 10px 8px; gap: 6px; border-bottom: 1px solid #f1f3f5; background-color: #ffffff; width: 100%; }
     .row-item input { border: 1px solid #ced4da; padding: 8px 6px; border-radius: 4px; font-size: 0.95rem; color: #495057; height: 38px; }
     .row-item input:focus { border-color: #6c757d; outline: none; }
+    
+    .row-index { font-weight: bold; color: #495057; min-width: 24px; text-align: center; font-size: 0.95rem; }
+    
     .input-title { flex: 2; min-width: 0; }
     .input-num { width: 25%; min-width: 75px; text-align: right; }
     .input-rate { width: 16%; min-width: 50px; text-align: right; }
@@ -57,7 +60,7 @@
     <div class="section-title">
       <span>รายรับ</span>
       <div>
-        <button class="btn" onclick="addInputRow('income-list', 'รายการรับ')">+ เพิ่มรายรับ</button>
+        <button class="btn" onclick="addInputRow('income-list', '')">+ เพิ่มรายรับ</button>
       </div>
     </div>
     <div id="income-list" aria-label="รายการรายรับ"></div>
@@ -65,7 +68,7 @@
     <div class="section-title">
       <span>รายจ่าย</span>
       <div>
-        <button class="btn" onclick="addInputRow('expense-list', 'รายการจ่าย')">+ เพิ่มรายจ่าย</button>
+        <button class="btn" onclick="addInputRow('expense-list', '')">+ เพิ่มรายจ่าย</button>
       </div>
     </div>
     <div id="expense-list" aria-label="รายการรายจ่าย"></div>
@@ -119,10 +122,14 @@
         const row = document.createElement('div');
         row.className = 'row-item';
 
+        const indexSpan = document.createElement('span');
+        indexSpan.className = 'row-index';
+        indexSpan.innerText = '1.';
+
         const inputTitle = document.createElement('input');
         inputTitle.type = 'text';
         inputTitle.className = 'input-title';
-        inputTitle.value = vTitle || defaultTitle;
+        inputTitle.value = (vTitle || defaultTitle).replace(/^\d+\.\s*/, '');
         inputTitle.setAttribute('aria-label', 'ชื่อรายการ');
         inputTitle.addEventListener('input', () => { calculateAll(); autoSave(); });
 
@@ -164,6 +171,7 @@
           autoSave();
         });
 
+        row.appendChild(indexSpan);
         row.appendChild(inputTitle);
         row.appendChild(inputNum);
         row.appendChild(inputRate);
@@ -176,10 +184,9 @@
       window.addInputRow = function (listId, defaultText, vTitle = '', vNum = '', vRate = '') {
         const list = document.getElementById(listId);
         if (!list) return;
-        const rowCount = list.children.length + 1;
-        const rowTitle = vTitle || `${rowCount}. ${defaultText}`;
-        const row = createRowElement(rowTitle, vTitle, vNum, vRate);
+        const row = createRowElement(defaultText, vTitle, vNum, vRate);
         list.appendChild(row);
+        reIndex(listId);
         calculateAll();
       };
 
@@ -189,15 +196,9 @@
         if (!list) return;
         const rows = list.getElementsByClassName('row-item');
         for (let i = 0; i < rows.length; i++) {
-          const inputTitle = rows[i].getElementsByClassName('input-title')[0];
-          if (!inputTitle) continue;
-          const cur = inputTitle.value.trim();
-          const match = cur.match(/^\d+\.\s*/);
-          const newPrefix = (i + 1) + '. ';
-          if (match) {
-            inputTitle.value = cur.replace(/^\d+\.\s*/, newPrefix);
-          } else {
-            inputTitle.value = newPrefix + cur;
+          const indexSpan = rows[i].getElementsByClassName('row-index')[0];
+          if (indexSpan) {
+            indexSpan.innerText = (i + 1) + '.';
           }
         }
       };
@@ -208,19 +209,21 @@
 
       window.calculateSection = function (listId) {
         const list = document.getElementById(listId);
-        if (!list) return { usdt: 0, thb: 0, text: '' };
+        if (!list) return { usdt: 0, thb: 0, text: '(ไม่มีธุรกรรม)\n\n' };
         const rows = list.getElementsByClassName('row-item');
         let totalUSDT = 0;
         let totalTHB = 0;
         let textDetails = '';
+        let validRowsCount = 0;
 
-        for (let row of rows) {
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
           const titleEl = row.getElementsByClassName('input-title')[0];
           const numEl = row.getElementsByClassName('input-num')[0];
           const rateEl = row.getElementsByClassName('input-rate')[0];
           const resultEl = row.getElementsByClassName('result-thb')[0];
 
-          const title = titleEl ? titleEl.value : '';
+          const title = titleEl ? titleEl.value.trim() : '';
           const usdt = parseFloat(numEl && numEl.value ? numEl.value : 0) || 0;
           const rate = parseFloat(rateEl && rateEl.value ? rateEl.value : 0) || 0;
           const thb = usdt * rate;
@@ -232,8 +235,18 @@
           totalUSDT += usdt;
           totalTHB += thb;
 
-          textDetails += `${title}\n( ${formatNumberTH(usdt)} USDT /    ${rate.toFixed(2)}    / ${formatNumberTH(thb)} บาท )\n\n`;
+          if (title !== '') {
+            validRowsCount++;
+            const displayIndex = validRowsCount + '. ';
+            // ปรับเว้นวรรคในวงเล็บให้ชิดกันกระชับขึ้นตามรูป image.png
+            textDetails += `${displayIndex}${title}\n(${formatNumberTH(usdt)} USDT / ${rate.toFixed(2)} / ${formatNumberTH(thb)} บาท)\n\n`;
+          }
         }
+
+        if (validRowsCount === 0) {
+          textDetails = '(ไม่มีธุรกรรม)\n\n';
+        }
+
         return { usdt: totalUSDT, thb: totalTHB, text: textDetails };
       };
 
@@ -245,8 +258,8 @@
         const income = calculateSection('income-list');
         const expense = calculateSection('expense-list');
 
-        document.getElementById('total-income-str').innerText = `( ${formatNumberTH(income.usdt)} USDT / ${formatNumberTH(income.thb)} บาท)`;
-        document.getElementById('total-expense-str').innerText = `( ${formatNumberTH(expense.usdt)} USDT / ${formatNumberTH(expense.thb)} บาท)`;
+        document.getElementById('total-income-str').innerText = `(${formatNumberTH(income.usdt)} USDT / ${formatNumberTH(income.thb)} บาท)`;
+        document.getElementById('total-expense-str').innerText = `(${formatNumberTH(expense.usdt)} USDT / ${formatNumberTH(expense.thb)} บาท)`;
 
         const finalBalanceUSDT = oldBalance + income.usdt - expense.usdt;
         document.getElementById('final-balance').innerText = `(${formatNumberTH(finalBalanceUSDT)} USDT)`;
@@ -261,17 +274,17 @@
         reportParts.push(`วันที่ ${dateStr}`);
         reportParts.push('');
         const oldBalanceFormatted = oldBalanceInput !== '' ? formatNumberTH(parseFloat(oldBalanceInput)) : '0.00';
-        reportParts.push(`คงเหลือเก่า = ( ${oldBalanceFormatted} USDT )`);
+        reportParts.push(`คงเหลือเก่า = (${oldBalanceFormatted} USDT)`);
         reportParts.push('');
         reportParts.push('รายรับ');
-        reportParts.push(income.text || '-\n');
+        reportParts.push(income.text);
         reportParts.push('รายจ่าย');
-        reportParts.push(expense.text || '-\n');
-        reportParts.push(`รวมรายรับ :    ( ${formatNumberTH(income.usdt)} USDT /    ${formatNumberTH(income.thb)} บาท)`);
-        reportParts.push(`รวมรายจ่าย :    ( ${formatNumberTH(expense.usdt)} USDT /    ${formatNumberTH(expense.thb)} บาท)`);
+        reportParts.push(expense.text);
+        // ปรับตรงรวมรายรับ/รวมรายจ่ายให้ตัวอักษรชิดกันขึ้น ไม่เว้นวรรคห่างเกินไป
+        reportParts.push(`รวมรายรับ : (${formatNumberTH(income.usdt)} USDT / ${formatNumberTH(income.thb)} บาท)`);
+        reportParts.push(`รวมรายจ่าย : (${formatNumberTH(expense.usdt)} USDT / ${formatNumberTH(expense.thb)} บาท)`);
         reportParts.push('');
         reportParts.push(`คงเหลือ (${formatNumberTH(finalBalanceUSDT)} USDT)`);
-        reportParts.push(`คงเหลือ (THB สะสมจากเรท) = ${formatNumberTH(finalTHB)} บาท`);
 
         document.getElementById('report-text').value = reportParts.join('\n');
       };
@@ -332,27 +345,62 @@
           const data = JSON.parse(raw);
           
           if (data) {
+            let oldBalanceValue = data.oldBalance || '';
+            let incomeSource = data.incomeData || [];
+            let expenseSource = data.expenseData || [];
+
+            if (data.savedAt) {
+              const now = new Date();
+              const savedDate = new Date(data.savedAt);
+              
+              let mostRecent6AM = new Date(now);
+              mostRecent6AM.setHours(6, 0, 0, 0);
+              if (now < mostRecent6AM) {
+                mostRecent6AM.setDate(mostRecent6AM.getDate() - 1);
+              }
+
+              if (savedDate < mostRecent6AM) {
+                const prevOldBalance = parseFloat(data.oldBalance) || 0;
+                let prevIncomeTotal = 0;
+                if (Array.isArray(data.incomeData)) {
+                  data.incomeData.forEach(item => { prevIncomeTotal += parseFloat(item.num) || 0; });
+                }
+                let prevExpenseTotal = 0;
+                if (Array.isArray(data.expenseData)) {
+                  data.expenseData.forEach(item => { prevExpenseTotal += parseFloat(item.num) || 0; });
+                }
+                
+                const prevFinalBalance = prevOldBalance + prevIncomeTotal - prevExpenseTotal;
+                
+                oldBalanceValue = prevFinalBalance.toFixed(2);
+                incomeSource = [];
+                expenseSource = [];
+                
+                setTimeout(() => { autoSave(); }, 100);
+              }
+            }
+
             document.getElementById('app-title').value = data.appTitle || 'รายงานบัญชี';
-            document.getElementById('old-balance').value = data.oldBalance || '';
+            document.getElementById('old-balance').value = oldBalanceValue;
 
             const incomeList = document.getElementById('income-list');
             const expenseList = document.getElementById('expense-list');
             incomeList.innerHTML = '';
             expenseList.innerHTML = '';
 
-            if (Array.isArray(data.incomeData) && data.incomeData.length > 0) {
-              data.incomeData.forEach((item, idx) => {
-                const defaultText = `${idx + 1}. รายการรับ`;
-                const row = createRowElement(defaultText, item.title || defaultText, item.num || '', item.rate || '');
+            if (Array.isArray(incomeSource) && incomeSource.length > 0) {
+              incomeSource.forEach((item) => {
+                const row = createRowElement('', item.title || '', item.num || '', item.rate || '');
                 incomeList.appendChild(row);
               });
+              reIndex('income-list');
             }
-            if (Array.isArray(data.expenseData) && data.expenseData.length > 0) {
-              data.expenseData.forEach((item, idx) => {
-                const defaultText = `${idx + 1}. รายการจ่าย`;
-                const row = createRowElement(defaultText, item.title || defaultText, item.num || '', item.rate || '');
+            if (Array.isArray(expenseSource) && expenseSource.length > 0) {
+              expenseSource.forEach((item) => {
+                const row = createRowElement('', item.title || '', item.num || '', item.rate || '');
                 expenseList.appendChild(row);
               });
+              reIndex('expense-list');
             }
           }
         } catch (e) {
@@ -366,7 +414,7 @@
         const txtEl = document.getElementById('report-text');
         if (!txtEl) return;
         txtEl.select();
-        txtEl.setSelectionRange(0, 99999); /* สำหรับมือถือ */
+        txtEl.setSelectionRange(0, 99999);
         
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(txtEl.value).then(() => {
@@ -396,10 +444,10 @@
 
       function ensureDefaultRows() {
         if (document.getElementById('income-list').children.length === 0) {
-          addInputRow('income-list', 'รายการรับ');
+          addInputRow('income-list', '');
         }
         if (document.getElementById('expense-list').children.length === 0) {
-          addInputRow('expense-list', 'รายการจ่าย');
+          addInputRow('expense-list', '');
         }
       }
 
