@@ -7,15 +7,52 @@
         * { box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; margin: 0; padding: 0; color: #333; width: 100%; }
         
+        /* หน้าปก */
+        .cover-page { 
+            width: 100%; 
+            min-height: 100vh; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            page-break-after: always;
+        }
+        .cover-title { 
+            font-size: 3rem; 
+            font-weight: bold; 
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .cover-date { 
+            font-size: 1.5rem; 
+            margin-bottom: 10px;
+            opacity: 0.95;
+        }
+        .cover-subtitle { 
+            font-size: 1.1rem; 
+            margin-top: 30px;
+            opacity: 0.9;
+        }
+        .cover-footer {
+            position: absolute;
+            bottom: 30px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
         /* ขยายตู้คอนเทนเนอร์ให้เต็มจอมือถือร้อยเปอร์เซ็นต์ */
         .container { width: 100%; max-width: 100%; margin: 0; background: white; overflow: hidden; border-bottom: 1px solid #dee2e6; }
         
         .header-box { background-color: #495057; text-align: center; padding: 16px 12px; }
-        .header-input { background: transparent; border: none; font-weight: bold; font-size: 1.3rem; text-align: center; width: 100%; font-family: inherit; color: #ffffff; border-bottom: 1px dashed #ced4da; }
+        .header-input { background: transparent; border: none; font-weight: bold; font-size: 1.3rem; text-align: center; width: 100%; font-family: inherit; color: #ffffff; border-bottom: 1px dashed #ccc; }
         .header-input:focus { outline: none; background: rgba(255,255,255,0.15); }
         
         .sub-header { padding: 14px 12px; border-bottom: 1px solid #dee2e6; font-size: 0.95rem; background-color: #ffffff; }
-        .section-title { background-color: #e9ecef; font-weight: bold; padding: 10px 12px; font-size: 1.05rem; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; color: #212529; }
+        .section-title { background-color: #e9ecef; font-weight: bold; padding: 10px 12px; font-size: 1.05rem; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
         
         /* ปรับแต่งแถวตารางให้ขยายเต็มความกว้างจอ และจัดสรรพื้นที่ให้สมดุล */
         .row-item { display: flex; align-items: center; padding: 10px 8px; gap: 6px; border-bottom: 1px solid #f1f3f5; background-color: #ffffff; width: 100%; }
@@ -35,20 +72,28 @@
         /* กล่องข้อความรายงานด้านล่าง */
         .output-box { width: 100%; padding: 14px 12px; background: #fff; box-sizing: border-box; }
         .output-title { font-weight: bold; margin-bottom: 12px; color: #212529; display: flex; justify-content: space-between; align-items: center; }
-        textarea { width: 100%; height: 280px; border: 1px solid #ced4da; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 0.95rem; resize: none; background-color: #f8f9fa; box-sizing: border-box; color: #212529; }
+        textarea { width: 100%; height: 280px; border: 1px solid #ced4da; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 0.95rem; resize: none; background-color: #f8f9fa; box-sizing: border-box; }
         
         /* ปุ่มขนาดพอดีนิ้วจิ้มง่ายบนมือถือ */
-        .btn { background-color: #6c757d; color: white; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: background 0.2s; height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+        .btn { background-color: #6c757d; color: white; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: bold; transition: background 0.2s; height: 38px; }
         .btn:hover { background-color: #495057; }
         .btn-copy { background-color: #28a745; font-size: 0.95rem; padding: 0 16px; height: 38px; }
         .btn-copy:hover { background-color: #218838; }
         .btn-del { background-color: #dc3545; padding: 0 8px; font-size: 0.8rem; height: 38px; width: 38px; flex-shrink: 0; }
         .btn-del:hover { background-color: #c82333; }
         
-        #loading { position: fixed; top: 10px; right: 10px; background: rgba(33,37,41,0.9); color: #fff; padding: 8px 14px; border-radius: 4px; display: none; font-size: 0.85rem; z-index: 1000; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+        #loading { position: fixed; top: 10px; right: 10px; background: rgba(33,37,41,0.9); color: #fff; padding: 8px 14px; border-radius: 4px; display: none; font-size: 0.85rem; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
+
+<!-- หน้าปก -->
+<div class="cover-page">
+    <div class="cover-title">📊 รายงานบัญชี</div>
+    <div class="cover-date" id="cover-date">27 มิถุนายน 2569</div>
+    <div class="cover-subtitle">รายรับ - รายจ่าย</div>
+    <div class="cover-footer">Account Report System</div>
+</div>
 
 <div id="loading">กำลังซิงค์ข้อมูล...</div>
 
@@ -109,6 +154,25 @@
         document.getElementById('loading').style.display = show ? 'block' : 'none';
     }
 
+    // ฟังก์ชันแปลงวันที่เป็นภาษาไทย
+    function getThaiDate(date = new Date()) {
+        const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์'];
+        const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+        
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear() + 543;
+        
+        return `${day} ${month} ${year}`;
+    }
+
+    // อัพเดตวันที่ทั้งสองที่
+    function updateDate() {
+        const thaiDate = getThaiDate();
+        document.getElementById('current-date').textContent = thaiDate;
+        document.getElementById('cover-date').textContent = thaiDate;
+    }
+
     function addInputRow(listId, defaultText, vTitle="", vNum="", vRate="") {
         const list = document.getElementById(listId);
         const rowCount = list.children.length + 1;
@@ -166,14 +230,15 @@
         const income = calculateSection('income-list');
         const expense = calculateSection('expense-list');
 
-        document.getElementById('total-income-str').innerText = `( ${income.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT / ${income.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท)`;
-        document.getElementById('total-expense-str').innerText = `( ${expense.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT / ${expense.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท)`;
+        document.getElementById('total-income-str').innerText = `( ${income.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT / ${income.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท )`;
+        document.getElementById('total-expense-str').innerText = `( ${expense.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT / ${expense.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท )`;
 
         const finalBalance = oldBalance + income.usdt - expense.usdt;
         document.getElementById('final-balance').innerText = `(${finalBalance.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT)`;
 
+        const thaiDate = getThaiDate();
         let reportText = `${titleText}\n\n`;
-        reportText += `วันที่ 27 มิถุนายน 2569\n`;
+        reportText += `วันที่ ${thaiDate}\n`;
         
         const oldBalanceFormatted = oldBalanceInput !== "" ? parseFloat(oldBalanceInput).toLocaleString('th-TH', {minimumFractionDigits: 2}) : "0.00";
         reportText += `คงเหลือเก่า = ( ${oldBalanceFormatted} USDT )\n\n`;
@@ -181,8 +246,8 @@
         reportText += `รายรับ\n${income.text || "-\n\n"}`;
         reportText += `รายจ่าย\n${expense.text || "-\n\n"}`;
         
-        reportText += `รวมรายรับ :    ( ${income.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT /    ${income.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท)\n`;
-        reportText += `รวมรายจ่าย :    ( ${expense.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT /    ${expense.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท)\n\n`;
+        reportText += `รวมรายรับ :    ( ${income.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT /    ${income.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท )\n`;
+        reportText += `รวมรายจ่าย :    ( ${expense.usdt.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT /    ${expense.thb.toLocaleString('th-TH', {minimumFractionDigits: 2})} บาท )\n`;
         reportText += `คงเหลือ (${finalBalance.toLocaleString('th-TH', {minimumFractionDigits: 2})} USDT)`;
 
         document.getElementById('report-text').value = reportText;
@@ -266,7 +331,10 @@
         alert("คัดลอกรายงานลงคลิปบอร์ดแล้ว!");
     }
 
-    window.onload = loadData;
+    window.onload = function() {
+        updateDate();
+        loadData();
+    };
 </script>
 
 </body>
