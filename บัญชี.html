@@ -13,16 +13,21 @@
     .header-input:focus { outline: none; background: rgba(255,255,255,0.15); }
     .sub-header { padding: 14px 12px; border-bottom: 1px solid #dee2e6; font-size: 0.95rem; background-color: #ffffff; }
     .section-title { background-color: #e9ecef; font-weight: bold; padding: 10px 12px; font-size: 1.05rem; border-top: 1px solid #dee2e6; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; color: #212529; }
-    .row-item { display: flex; align-items: center; padding: 10px 8px; gap: 6px; border-bottom: 1px solid #f1f3f5; background-color: #ffffff; width: 100%; }
+    
+    .row-item { display: flex; flex-direction: column; align-items: stretch; padding: 10px 8px; gap: 8px; border-bottom: 1px solid #f1f3f5; background-color: #ffffff; width: 100%; }
+    .row-top, .row-bottom { display: flex; align-items: center; gap: 8px; width: 100%; }
+    .row-bottom { padding-left: 32px; }
+
     .row-item input { border: 1px solid #ced4da; padding: 8px 6px; border-radius: 4px; font-size: 0.95rem; color: #495057; height: 38px; }
     .row-item input:focus { border-color: #6c757d; outline: none; }
     
     .row-index { font-weight: bold; color: #495057; min-width: 24px; text-align: center; font-size: 0.95rem; }
     
-    .input-title { flex: 2; min-width: 0; }
-    .input-num { width: 25%; min-width: 75px; text-align: right; }
-    .input-rate { width: 16%; min-width: 50px; text-align: right; }
-    .result-thb { width: 22%; min-width: 75px; text-align: right; font-weight: bold; color: #6c757d; font-size: 0.85rem; word-break: break-all; }
+    .input-title { flex: 1; min-width: 0; }
+    .input-num { flex: 2; min-width: 75px; text-align: right; }
+    .input-rate { flex: 1.2; min-width: 50px; text-align: right; }
+    .result-thb { flex: 2; min-width: 75px; text-align: right; font-weight: bold; color: #6c757d; font-size: 0.95rem; word-break: break-all; }
+    
     .summary-box { background-color: #f8f9fa; padding: 14px 12px; border-top: 2px dashed #dee2e6; font-size: 0.95rem; }
     .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; color: #495057; }
     .total-balance { background-color: #343a40; color: #ffffff; font-weight: bold; padding: 16px 12px; display: flex; justify-content: space-between; font-size: 1.05rem; align-items: center; gap:12px; }
@@ -41,6 +46,9 @@
   </style>
 </head>
 <body>
+  <datalist id="income-suggestions"></datalist>
+  <datalist id="expense-suggestions"></datalist>
+
   <div id="loading" role="status" aria-live="polite">กำลังบันทึก...</div>
   <div id="toast" role="status" aria-live="polite"></div>
 
@@ -104,9 +112,12 @@
   <script>
     (function () {
       const STORAGE_KEY = 'thai-ledger-mobile-v1';
+      const SUGGESTIONS_KEY = 'thai-ledger-suggestions-v1';
       let saveTimeout;
       const loadingEl = document.getElementById('loading');
       const toastEl = document.getElementById('toast');
+
+      let suggestionsData = { income: [], expense: [] };
 
       function showLoading(show) {
         loadingEl.style.display = show ? 'block' : 'none';
@@ -118,9 +129,51 @@
         setTimeout(() => { toastEl.style.display = 'none'; }, ms);
       }
 
-      function createRowElement(defaultTitle, vTitle = '', vNum = '', vRate = '') {
+      function renderSuggestions() {
+        const incomeList = document.getElementById('income-suggestions');
+        const expenseList = document.getElementById('expense-suggestions');
+        
+        if(incomeList) {
+          incomeList.innerHTML = suggestionsData.income.map(item => `<option value="${item}"></option>`).join('');
+        }
+        if(expenseList) {
+          expenseList.innerHTML = suggestionsData.expense.map(item => `<option value="${item}"></option>`).join('');
+        }
+      }
+
+      function updateSuggestionsFromCurrentInputs() {
+        let updated = false;
+        
+        const incomeRows = document.getElementById('income-list').getElementsByClassName('input-title');
+        for (let input of incomeRows) {
+          const val = input.value.trim();
+          if (val && !suggestionsData.income.includes(val)) {
+            suggestionsData.income.push(val);
+            updated = true;
+          }
+        }
+
+        const expenseRows = document.getElementById('expense-list').getElementsByClassName('input-title');
+        for (let input of expenseRows) {
+          const val = input.value.trim();
+          if (val && !suggestionsData.expense.includes(val)) {
+            suggestionsData.expense.push(val);
+            updated = true;
+          }
+        }
+
+        if (updated) {
+          localStorage.setItem(SUGGESTIONS_KEY, JSON.stringify(suggestionsData));
+          renderSuggestions();
+        }
+      }
+
+      function createRowElement(listId, defaultTitle, vTitle = '', vNum = '', vRate = '') {
         const row = document.createElement('div');
         row.className = 'row-item';
+
+        const topRow = document.createElement('div');
+        topRow.className = 'row-top';
 
         const indexSpan = document.createElement('span');
         indexSpan.className = 'row-index';
@@ -131,31 +184,14 @@
         inputTitle.className = 'input-title';
         inputTitle.value = (vTitle || defaultTitle).replace(/^\d+\.\s*/, '');
         inputTitle.setAttribute('aria-label', 'ชื่อรายการ');
+        
+        if (listId === 'income-list') {
+          inputTitle.setAttribute('list', 'income-suggestions');
+        } else {
+          inputTitle.setAttribute('list', 'expense-suggestions');
+        }
+
         inputTitle.addEventListener('input', () => { calculateAll(); autoSave(); });
-
-        const inputNum = document.createElement('input');
-        inputNum.type = 'number';
-        inputNum.className = 'input-num';
-        inputNum.step = '0.01';
-        inputNum.placeholder = 'USDT';
-        inputNum.value = vNum || '';
-        inputNum.style.textAlign = 'right';
-        inputNum.setAttribute('aria-label', 'จำนวน (USDT)');
-        inputNum.addEventListener('input', () => { calculateAll(); autoSave(); });
-
-        const inputRate = document.createElement('input');
-        inputRate.type = 'number';
-        inputRate.className = 'input-rate';
-        inputRate.step = '0.01';
-        inputRate.placeholder = 'เรท';
-        inputRate.value = vRate || '';
-        inputRate.style.textAlign = 'right';
-        inputRate.setAttribute('aria-label', 'เรท');
-        inputRate.addEventListener('input', () => { calculateAll(); autoSave(); });
-
-        const resultSpan = document.createElement('span');
-        resultSpan.className = 'result-thb';
-        resultSpan.innerText = '0.00 บ.';
 
         const delBtn = document.createElement('button');
         delBtn.className = 'btn btn-del';
@@ -171,12 +207,41 @@
           autoSave();
         });
 
-        row.appendChild(indexSpan);
-        row.appendChild(inputTitle);
-        row.appendChild(inputNum);
-        row.appendChild(inputRate);
-        row.appendChild(resultSpan);
-        row.appendChild(delBtn);
+        topRow.appendChild(indexSpan);
+        topRow.appendChild(inputTitle);
+        topRow.appendChild(delBtn);
+
+        const bottomRow = document.createElement('div');
+        bottomRow.className = 'row-bottom';
+
+        const inputNum = document.createElement('input');
+        inputNum.type = 'number';
+        inputNum.className = 'input-num';
+        inputNum.step = '0.01';
+        inputNum.placeholder = 'USDT';
+        inputNum.value = vNum || '';
+        inputNum.setAttribute('aria-label', 'จำนวน (USDT)');
+        inputNum.addEventListener('input', () => { calculateAll(); autoSave(); });
+
+        const inputRate = document.createElement('input');
+        inputRate.type = 'number';
+        inputRate.className = 'input-rate';
+        inputRate.step = '0.01';
+        inputRate.placeholder = 'เรท';
+        inputRate.value = vRate || '';
+        inputRate.setAttribute('aria-label', 'เรท');
+        inputRate.addEventListener('input', () => { calculateAll(); autoSave(); });
+
+        const resultSpan = document.createElement('span');
+        resultSpan.className = 'result-thb';
+        resultSpan.innerText = '0.00 บ.';
+
+        bottomRow.appendChild(inputNum);
+        bottomRow.appendChild(inputRate);
+        bottomRow.appendChild(resultSpan);
+
+        row.appendChild(topRow);
+        row.appendChild(bottomRow);
 
         return row;
       }
@@ -184,7 +249,7 @@
       window.addInputRow = function (listId, defaultText, vTitle = '', vNum = '', vRate = '') {
         const list = document.getElementById(listId);
         if (!list) return;
-        const row = createRowElement(defaultText, vTitle, vNum, vRate);
+        const row = createRowElement(listId, defaultText, vTitle, vNum, vRate);
         list.appendChild(row);
         reIndex(listId);
         calculateAll();
@@ -238,7 +303,6 @@
           if (title !== '') {
             validRowsCount++;
             const displayIndex = validRowsCount + '. ';
-            // ปรับเว้นวรรคในวงเล็บให้ชิดกันกระชับขึ้นตามรูป image.png
             textDetails += `${displayIndex}${title}\n(${formatNumberTH(usdt)} USDT / ${rate.toFixed(2)} / ${formatNumberTH(thb)} บาท)\n\n`;
           }
         }
@@ -280,7 +344,6 @@
         reportParts.push(income.text);
         reportParts.push('รายจ่าย');
         reportParts.push(expense.text);
-        // ปรับตรงรวมรายรับ/รวมรายจ่ายให้ตัวอักษรชิดกันขึ้น ไม่เว้นวรรคห่างเกินไป
         reportParts.push(`รวมรายรับ : (${formatNumberTH(income.usdt)} USDT / ${formatNumberTH(income.thb)} บาท)`);
         reportParts.push(`รวมรายจ่าย : (${formatNumberTH(expense.usdt)} USDT / ${formatNumberTH(expense.thb)} บาท)`);
         reportParts.push('');
@@ -302,6 +365,8 @@
         clearTimeout(saveTimeout);
         showLoading(true);
         saveTimeout = setTimeout(function () {
+          updateSuggestionsFromCurrentInputs();
+
           const appTitle = document.getElementById('app-title').value;
           const oldBalance = document.getElementById('old-balance').value;
 
@@ -336,6 +401,18 @@
 
       window.loadData = function () {
         try {
+          const rawSuggest = localStorage.getItem(SUGGESTIONS_KEY);
+          if (rawSuggest) {
+            suggestionsData = JSON.parse(rawSuggest);
+            if(!suggestionsData.income) suggestionsData.income = [];
+            if(!suggestionsData.expense) suggestionsData.expense = [];
+          }
+          renderSuggestions();
+        } catch(e) {
+          console.warn("Load suggestions error", e);
+        }
+
+        try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (!raw) {
             ensureDefaultRows();
@@ -353,13 +430,12 @@
               const now = new Date();
               const savedDate = new Date(data.savedAt);
               
-              let mostRecent6AM = new Date(now);
-              mostRecent6AM.setHours(6, 0, 0, 0);
-              if (now < mostRecent6AM) {
-                mostRecent6AM.setDate(mostRecent6AM.getDate() - 1);
-              }
+              // ปรับเงื่อนไขตัดวันเป็น "เที่ยงคืนตรง (00:00:00)" ของวันปัจจุบันแทน 6 โมงเช้า
+              let resetPoint = new Date(now);
+              resetPoint.setHours(0, 0, 0, 0);
 
-              if (savedDate < mostRecent6AM) {
+              // ถ้าเวลาบันทึกล่าสุด เกิดขึ้นก่อนเที่ยงคืนที่ผ่านมา (นั่นคือบันทึกไว้เมื่อวานหรือเก่ากว่านั้น) ให้รีเซ็ตทันที
+              if (savedDate < resetPoint) {
                 const prevOldBalance = parseFloat(data.oldBalance) || 0;
                 let prevIncomeTotal = 0;
                 if (Array.isArray(data.incomeData)) {
@@ -390,14 +466,14 @@
 
             if (Array.isArray(incomeSource) && incomeSource.length > 0) {
               incomeSource.forEach((item) => {
-                const row = createRowElement('', item.title || '', item.num || '', item.rate || '');
+                const row = createRowElement('income-list', '', item.title || '', item.num || '', item.rate || '');
                 incomeList.appendChild(row);
               });
               reIndex('income-list');
             }
             if (Array.isArray(expenseSource) && expenseSource.length > 0) {
               expenseSource.forEach((item) => {
-                const row = createRowElement('', item.title || '', item.num || '', item.rate || '');
+                const row = createRowElement('expense-list', '', item.title || '', item.num || '', item.rate || '');
                 expenseList.appendChild(row);
               });
               reIndex('expense-list');
