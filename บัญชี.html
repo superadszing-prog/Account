@@ -6,14 +6,15 @@
   <meta name="theme-color" content="#495057" />
   <meta name="description" content="แอพรายงานบัญชี - บันทึกรายรับ รายจ่าย และคำนวณคงเหลือแบบเรียลไทม์" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23000000' rx='45'/><text x='96' y='130' font-size='120' font-weight='bold' fill='white' text-anchor='middle' font-family='Arial'>ธ</text></svg>" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%23495057' rx='45'/%3E%3Ctext x='96' y='130' font-size='120' font-weight='bold' fill='white' text-anchor='middle' font-family='Arial, sans-serif'%3Eธ%3C/text%3E%3C/svg%3E" />
   <title>รายงานบัญชี</title>
   <style>
     * { box-sizing: border-box; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; margin: 0; padding: 0; color: #333; width: 100%; }
     .container { width: 100%; max-width: 100%; margin: 0; background: white; overflow: hidden; border-bottom: 1px solid #dee2e6; }
-    .header-box { background-color: #495057; text-align: center; padding: 16px 12px; display: flex; align-items: center; justify-content: center; gap: 12px; }
-    .logo-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.2); flex-shrink: 0; }
+    .header-box { background-color: #495057; text-align: center; padding: 12px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .logo-icon { width: 56px; height: 56px; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3); overflow: hidden; }
+    .logo-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 14px; }
     .header-input { background: transparent; border: none; font-weight: bold; font-size: 1.3rem; text-align: center; flex: 1; font-family: inherit; color: #ffffff; border-bottom: 1px dashed #c0c0c0; }
     .header-input:focus { outline: none; background: rgba(255,255,255,0.15); }
     .sub-header { padding: 14px 12px; border-bottom: 1px solid #dee2e6; font-size: 0.95rem; background-color: #ffffff; }
@@ -51,7 +52,54 @@
 
   <div class="container" role="main" aria-label="แอพรายงานบัญชี">
     <div class="header-box">
-      <div class="logo-icon" title="บัญชี">ธ</div>
+      <div class="logo-icon" title="บัญชี">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background -->
+          <rect width="200" height="200" fill="#87CEEB"/>
+          
+          <!-- Couch -->
+          <ellipse cx="100" cy="140" rx="70" ry="30" fill="#FF8C42"/>
+          <rect x="40" y="120" width="120" height="35" fill="#FF8C42" rx="8"/>
+          <rect x="35" y="155" width="130" height="10" fill="#D97634"/>
+          
+          <!-- Person body -->
+          <circle cx="100" cy="70" r="22" fill="#FDBCB4"/>
+          
+          <!-- Hair -->
+          <path d="M 78 50 Q 78 35 100 35 Q 122 35 122 50 L 122 65 Q 100 75 78 65 Z" fill="#1a1a2e"/>
+          <path d="M 75 48 Q 72 42 68 45" stroke="#1a1a2e" stroke-width="3" fill="none" stroke-linecap="round"/>
+          <path d="M 125 48 Q 128 42 132 45" stroke="#1a1a2e" stroke-width="3" fill="none" stroke-linecap="round"/>
+          
+          <!-- Eyes -->
+          <circle cx="92" cy="68" r="4" fill="#000"/>
+          <circle cx="108" cy="68" r="4" fill="#000"/>
+          <circle cx="93" cy="67" r="1.5" fill="#fff"/>
+          <circle cx="109" cy="67" r="1.5" fill="#fff"/>
+          
+          <!-- Smile -->
+          <path d="M 92 78 Q 100 82 108 78" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+          
+          <!-- Jacket -->
+          <path d="M 78 88 L 70 110 L 130 110 L 122 88 Z" fill="#F5DEB3" stroke="#D4A574" stroke-width="1"/>
+          <rect x="78" y="88" width="44" height="22" fill="#4A90E2" rx="3"/>
+          
+          <!-- Arms -->
+          <ellipse cx="65" cy="105" rx="10" ry="20" fill="#FDBCB4" transform="rotate(-30 65 105)"/>
+          <ellipse cx="135" cy="105" rx="10" ry="20" fill="#FDBCB4" transform="rotate(30 135 105)"/>
+          
+          <!-- Coffee cup in hand -->
+          <ellipse cx="60" cy="115" rx="12" ry="8" fill="#FFFFFF" stroke="#8B7355" stroke-width="2"/>
+          <path d="M 72 115 Q 78 110 82 115" fill="none" stroke="#8B7355" stroke-width="2" stroke-linecap="round"/>
+          <ellipse cx="60" cy="115" rx="12" ry="5" fill="#8B4513" opacity="0.7"/>
+          
+          <!-- Pants -->
+          <rect x="85" y="110" width="30" height="35" fill="#4A5568"/>
+          
+          <!-- Shoes -->
+          <ellipse cx="90" cy="155" rx="8" ry="6" fill="#E8E8E8"/>
+          <ellipse cx="110" cy="155" rx="8" ry="6" fill="#E8E8E8"/>
+        </svg>
+      </div>
       <input type="text" id="app-title" class="header-input" value="รายงานบัญชี" oninput="calculateAll(); autoSave();" aria-label="ชื่อรายงาน">
     </div>
 
@@ -426,7 +474,7 @@
           }).catch(() => {
             try {
               document.execCommand('copy');
-              showToast('คัดลอกรายงานแล้ว (fallback)');
+              showToast('คัดลอกรายง��นแล้ว (fallback)');
             } catch (e) {
               alert('ไม่สามารถคัดลอกอัตโนมัติ — โปรดคัดลอกด้วยตนเอง');
             }
@@ -455,7 +503,6 @@
         }
       }
 
-      // Register Service Worker สำหรับ PWA
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(() => {});
       }
